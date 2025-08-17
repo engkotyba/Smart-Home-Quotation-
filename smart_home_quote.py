@@ -8,11 +8,18 @@ from collections import Counter
 # --- Inject CSS for buttons and the floating WhatsApp button ---
 st.markdown("""
 <style>
-    /* Button styling */
+    /* Button styling to fill container width */
     div.stButton > button {
         width: 100%;
     }
-
+    
+    /* Main content centering */
+    .css-1dp5vir { /* Main container class */
+        max-width: 700px;
+        margin: auto;
+        padding-top: 50px;
+    }
+    
     /* Floating WhatsApp button */
     .whatsapp-float {
         position: fixed;
@@ -25,7 +32,7 @@ st.markdown("""
         border-radius: 50px;
         text-align: center;
         box-shadow: 2px 2px 3px #999;
-        z-index: 1000; /* High z-index to be on top of other content */
+        z-index: 1000;
     }
 
     .whatsapp-float img {
@@ -269,4 +276,5 @@ if system_type == "WiFi Smart Home":
             generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
 
 else:
+
     st.info("📞 Please contact us at info@ketechs.com or 0566184681 for Wired Smart Home quotations.")
