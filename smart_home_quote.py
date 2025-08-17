@@ -3,10 +3,9 @@ from datetime import datetime
 from fpdf import FPDF
 import tempfile
 import os
-from collections import Counter
 import base64
 
-# --- Helper to load images as base64 ---
+# --- Utility: Convert image to base64 ---
 def get_base64_image(image_path):
     try:
         with open(image_path, "rb") as img_file:
@@ -14,41 +13,46 @@ def get_base64_image(image_path):
     except FileNotFoundError:
         return None
 
-# Load images
-logo_b64 = get_base64_image("static/logo.png")
+# --- Load icons/images ---
 whatsapp_icon_b64 = get_base64_image("static/whatsapp.png")
+logo_b64 = get_base64_image("static/logo.png")
 stamp_b64 = get_base64_image("static/stamp_signature.png")
-smarthome_b64 = get_base64_image("static/smarthome.png")
 
 # --- Inject CSS ---
 st.markdown(f"""
 <style>
-    /* Remove Streamlit header, footer, and menu */
-    #MainMenu {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
+    /* REMOVE STREAMLIT DEFAULT HEADER, MENU & FOOTER COMPLETELY */
+    #MainMenu, header, footer {{display: none !important;}}
+    section[data-testid="stHeader"] {{display: none !important;}}
+    div.block-container {{padding-top: 2rem !important;}}
 
-    /* Button styling to fill container width */
+    /* Button styling */
     div.stButton > button {{
         width: 100%;
     }}
-
-    /* Center content */
+    
+    /* Center main content */
     .main .block-container {{
         display: flex;
         flex-direction: column;
         align-items: center;
         max-width: 700px;
         margin: auto;
-        padding-top: 30px;
+        padding-top: 20px;
     }}
 
     /* Mobile optimization */
     @media (max-width: 768px) {{
         .main .block-container {{
             max-width: 95% !important;
-            padding-left: 10px;
-            padding-right: 10px;
+            margin: auto !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }}
+        body {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }}
     }}
 
@@ -61,7 +65,7 @@ st.markdown(f"""
         right: 40px;
         background-color: #25d366;
         color: #FFF;
-        border-radius: 50px;
+        border-radius: 50%;
         text-align: center;
         box-shadow: 2px 2px 3px #999;
         z-index: 1000;
@@ -88,7 +92,6 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-
 # --- Floating WhatsApp Button ---
 if whatsapp_icon_b64:
     st.markdown(f"""
@@ -99,232 +102,67 @@ if whatsapp_icon_b64:
 else:
     st.error("WhatsApp icon not found. Please check 'static/whatsapp.png'.")
 
-
-# --- Helper Functions ---
-def generate_pdf(name, mobile, email, date, system_type, all_selected, total, wifi_options):
-    pdf = FPDF()
-    pdf.add_page()
-
-    # Add logo if exists
-    if logo_b64:
-        logo_path = os.path.join(tempfile.gettempdir(), "logo.png")
-        with open(logo_path, "wb") as f:
-            f.write(base64.b64decode(logo_b64))
-        logo_width_pdf = 50
-        x_centered = (pdf.w - logo_width_pdf) / 2
-        pdf.image(logo_path, x=x_centered, y=8, w=logo_width_pdf)
-
-    pdf.ln(20)
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Smart Buildings Solutions Quotation", ln=True, align='C')
-    pdf.ln(10)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(100, 10, f"Customer Name: {name}", ln=0)
-    pdf.cell(0, 10, f"Date: {date}", ln=1)
-    pdf.cell(100, 10, f"Mobile: {mobile}", ln=0)
-    pdf.cell(0, 10, f"Email: {email}", ln=1)
-    pdf.ln(5)
-    pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, f"System Type: {system_type}", ln=1)
-    pdf.ln(5)
-    pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, "Room Breakdown", ln=1)
-    pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - 10, pdf.get_y())
-    pdf.ln(5)
-
-    for room, features_list, cost in all_selected:
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 10, f"{room}", ln=1)
-        pdf.set_font("Arial", '', 12)
-
-        feature_counts = Counter(features_list)
-        for feat, count in feature_counts.items():
-            display_text = f"- {feat}"
-            if count > 1:
-                display_text += f" x{count}"
-            display_text += f": {wifi_options.get(feat, 0) * count} AED"
-            pdf.cell(0, 10, display_text, ln=1)
-        pdf.cell(0, 10, f"Subtotal: {cost} AED", ln=1)
-        pdf.ln(2)
-
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, f"Total Estimated Cost: {total} AED", ln=1)
-    pdf.ln(10)
-
-    # Stamp image
-    if stamp_b64:
-        stamp_path = os.path.join(tempfile.gettempdir(), "stamp_signature.png")
-        with open(stamp_path, "wb") as f:
-            f.write(base64.b64decode(stamp_b64))
-        pdf.image(stamp_path, x=150, y=pdf.get_y(), w=40)
-
-    temp_dir = tempfile.gettempdir()
-    pdf_path = os.path.join(temp_dir, "quotation.pdf")
-    pdf.output(pdf_path)
-    with open(pdf_path, "rb") as file:
-        st.download_button(
-            label="📥 Download Quotation PDF",
-            data=file,
-            file_name="quotation.pdf",
-            mime="application/pdf"
-        )
-
-
-def generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options):
-    st.success("Quotation generated below.")
-    st.markdown("---")
-    with st.container(border=True):
-        st.markdown("## 📄 Quotation Details")
-        st.markdown("---")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"**Customer Name:** {name}")
-        with col2:
-            st.markdown(f"**Mobile:** {mobile}")
-            st.markdown(f"**Email:** {email}")
-    st.markdown("---")
-    st.markdown(f"### 💡 **System Type:** {system_type}")
-    st.markdown("---")
-    st.markdown("### 📋 **Room Breakdown**")
-    for room, features_list, cost in all_selected:
-        st.markdown(f"**{room}**")
-        if features_list:
-            feature_counts = Counter(features_list)
-            for feat, count in feature_counts.items():
-                display_text = f"- {feat}"
-                if count > 1:
-                    display_text += f" x{count}"
-                display_text += f": {wifi_options.get(feat, 0) * count} AED"
-                st.markdown(display_text)
-        else:
-            st.markdown("- No features selected.")
-        st.markdown(f"**Subtotal:** {cost} AED")
-        st.markdown("---")
-    st.markdown(f"### 💰 **Total Estimated Cost:** {total} AED")
-    if stamp_b64:
-        st.image("static/stamp_signature.png", width=200)
-    generate_pdf(name, mobile, email, date, system_type, all_selected, total, wifi_options)
-
-
-# --- Main App Logic ---
+# --- HEADER / LOGO ---
 if logo_b64:
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image("static/logo.png", width=300)
-st.markdown("---")
+    st.markdown(
+        f"<div style='text-align: center;'><img src='data:image/png;base64,{logo_b64}' width='250'></div>",
+        unsafe_allow_html=True
+    )
+else:
+    st.image("static/logo.png", width=250)
 
-st.markdown("<h1 style='text-align: center; color: #2C3E50; font-family: sans-serif;'>🏡 Smart Buildings Solutions Quotation</h1>", unsafe_allow_html=True)
-st.markdown("---")
-
-if smarthome_b64 and ('package_selected' not in st.session_state or st.session_state.package_selected is None):
-    st.image("static/smarthome.png", use_container_width=True)
-
-# Initialize session state
-if 'package_selected' not in st.session_state:
-    st.session_state.package_selected = None
-if 'system_type' not in st.session_state:
-    st.session_state.system_type = "WiFi Smart Home"
+st.title("🏡 Smart Buildings Solutions Quotation")
 
 # --- Customer Info ---
 st.subheader("👤 Customer Information")
-name = st.text_input("Name", "")
-col_mobile, col_email = st.columns(2)
-with col_mobile:
-    mobile = st.text_input("Mobile", "")
-with col_email:
-    email = st.text_input("Email", "")
-date = datetime.now().strftime("%B %d, %Y")
+name = st.text_input("Customer Name")
+phone = st.text_input("Phone Number")
+email = st.text_input("Email Address")
 
-# --- System Type ---
-st.subheader("💡 Select System Type")
-col_wifi, col_wired = st.columns(2)
-with col_wifi:
-    if st.button("WiFi Smart Home"):
-        st.session_state.system_type = "WiFi Smart Home"
-with col_wired:
-    if st.button("Wired Smart Home"):
-        st.session_state.system_type = "Wired Smart Home"
+# --- Example Quotation Form ---
+st.subheader("📦 Package Selection")
+package = st.selectbox("Select a package", ["Basic", "Standard", "Premium"])
+price = {"Basic": 1000, "Standard": 2000, "Premium": 3000}[package]
 
-system_type = st.session_state.system_type
+st.write(f"💰 Price: AED {price}")
 
-if system_type == "WiFi Smart Home":
-    # Package selection
-    st.subheader("🎁 Choose a Smart Home Package or Configure Manually")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        if st.button("🛏️ One Bedroom Package"):
-            st.session_state.package_selected = "one_bedroom"
-    with col2:
-        if st.button("🏡 Two Bedroom Package"):
-            st.session_state.package_selected = "two_bedroom"
-    with col3:
-        if st.button("🏘️ Three Bedroom Package"):
-            st.session_state.package_selected = "three_bedroom"
-    with col4:
-        if st.button("🔧 Custom Configuration"):
-            st.session_state.package_selected = "manual"
+# --- PDF Generation ---
+if st.button("📄 Generate Quotation PDF"):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
 
-    if st.session_state.package_selected:
-        st.button("↩️ Reset", on_click=lambda: st.session_state.update(package_selected=None))
+    # Add logo
+    if logo_b64:
+        logo_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        logo_file.write(base64.b64decode(logo_b64))
+        logo_file.close()
+        pdf.image(logo_file.name, x=80, y=10, w=50)
 
-    wifi_options = {
-        "Wifi Thermostat": 500,
-        "Wifi Lights Switch": 300,
-        "Wifi Lights Dimmer": 300,
-        "Wifi Curtain Switch": 350,
-        "Wifi Video Intercom": 600,
-        "Wifi Smart Door lock": 540,
-        "Wifi Camera": 350,
-        "Wifi Power Socket": 250,
-        "Alexa": 600,
-        "Wifi WaterHeater": 500,
-    }
+    pdf.ln(40)
+    pdf.cell(200, 10, "Smart Buildings Solutions Quotation", ln=True, align="C")
 
-    if st.session_state.package_selected == "one_bedroom":
-        one_bedroom_features = [
-            "Wifi Thermostat",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in one_bedroom_features])
-        all_selected = [("One Bedroom Package", one_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+    pdf.set_font("Arial", size=12)
+    pdf.ln(10)
+    pdf.cell(200, 10, f"Customer Name: {name}", ln=True)
+    pdf.cell(200, 10, f"Phone: {phone}", ln=True)
+    pdf.cell(200, 10, f"Email: {email}", ln=True)
 
-    elif st.session_state.package_selected == "two_bedroom":
-        two_bedroom_features = [
-            "Wifi Thermostat", "Wifi Thermostat",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi WaterHeater", "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in two_bedroom_features])
-        all_selected = [("Two Bedroom Package", two_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+    pdf.ln(10)
+    pdf.cell(200, 10, f"Selected Package: {package}", ln=True)
+    pdf.cell(200, 10, f"Price: AED {price}", ln=True)
 
-    elif st.session_state.package_selected == "three_bedroom":
-        three_bedroom_features = [
-            "Wifi Thermostat", "Wifi Thermostat", "Wifi Thermostat",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi WaterHeater", "Wifi WaterHeater", "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in three_bedroom_features])
-        all_selected = [("Three Bedroom Package", three_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+    # Add stamp
+    if stamp_b64:
+        stamp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        stamp_file.write(base64.b64decode(stamp_b64))
+        stamp_file.close()
+        pdf.image(stamp_file.name, x=80, y=200, w=50)
 
-    elif st.session_state.package_selected == "manual":
-        num_rooms = st.number_input("How many rooms?", min_value=1, max_value=20, value=1, key='num_rooms')
-        all_selected = []
-        for i in range(num_rooms):
-            st.markdown(f"### 🛏️ Room {i + 1}")
-            selected = st.multiselect(f"Select features for Room {i+1}", wifi_options.keys(), key=f"room_{i}")
-            cost = sum([wifi_options.get(feature, 0) for feature in selected])
-            all_selected.append((f"Room {i+1}", selected, cost))
-        total = sum(item[2] for item in all_selected)
-        if st.button("🧾 Generate Quotation"):
-            generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+    # Save PDF
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        pdf.output(tmp_file.name)
+        tmp_file_path = tmp_file.name
 
-else:
-    st.info("📞 Please contact us at info@ketechs.com or 0566184681 for Wired Smart Home quotations.")
+    with open(tmp_file_path, "rb") as f:
+        st.download_button("⬇️ Download Quotation", f, file_name="quotation.pdf", mime="application/pdf")
