@@ -13,11 +13,17 @@ st.markdown("""
         width: 100%;
     }
     
-    /* Main content centering */
-    .css-1dp5vir { /* Main container class */
+    /* Center all main content on the page */
+    .stApp {
+        padding-top: 50px;
+    }
+    
+    .main .block-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         max-width: 700px;
         margin: auto;
-        padding-top: 50px;
     }
     
     /* Floating WhatsApp button */
@@ -278,3 +284,4 @@ if system_type == "WiFi Smart Home":
 else:
 
     st.info("📞 Please contact us at info@ketechs.com or 0566184681 for Wired Smart Home quotations.")
+
