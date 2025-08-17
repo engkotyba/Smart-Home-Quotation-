@@ -1,1 +1,1 @@
-web: streamlit run smart_home_quote.py
+web: python -m streamlit run smart_home_quote.py
