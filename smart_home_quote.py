@@ -13,19 +13,6 @@ st.markdown("""
         width: 100%;
     }
     
-    /* Center all main content on the page */
-    .stApp {
-        padding-top: 50px;
-    }
-    
-    .main .block-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        max-width: 700px;
-        margin: auto;
-    }
-    
     /* Floating WhatsApp button */
     .whatsapp-float {
         position: fixed;
@@ -151,137 +138,139 @@ def generate_quotation(name, mobile, email, date, system_type, all_selected, tot
     st.image("static/stamp_signature.png", width=200)
     generate_pdf(name, mobile, email, date, system_type, all_selected, total, wifi_options)
 
-# --- Main App Logic ---
-# Centered logo using st.columns
-col1, col2, col3 = st.columns([1,2,1])
-with col2:
-    st.image("static/logo.png", width=300)
-st.markdown("---")
 
-# Styled Title
-st.markdown("<h1 style='text-align: center; color: #2C3E50; font-family: sans-serif;'>🏡 Smart Buildings Solutions Quotation</h1>", unsafe_allow_html=True)
-st.markdown("---")
+# --- Main App Logic (all content is now in a centered column) ---
+col1, content_col, col2 = st.columns([1, 4, 1])
 
-# Image placed near the title
-if 'package_selected' not in st.session_state or st.session_state.package_selected is None:
-    st.image("static/smarthome.png", use_container_width=True)
+with content_col:
+    # Centered logo using st.columns
+    colA, colB, colC = st.columns([1,2,1])
+    with colB:
+        st.image("static/logo.png", width=300)
+    st.markdown("---")
 
-# Initialize session state for the package selection
-if 'package_selected' not in st.session_state:
-    st.session_state.package_selected = None
-if 'system_type' not in st.session_state:
-    st.session_state.system_type = "WiFi Smart Home"
+    # Styled Title
+    st.markdown("<h1 style='text-align: center; color: #2C3E50; font-family: sans-serif;'>🏡 Smart Buildings Solutions Quotation</h1>", unsafe_allow_html=True)
+    st.markdown("---")
 
-# --- Customer Info ---
-st.subheader("👤 Customer Information")
-name = st.text_input("Name", "")
-col_mobile, col_email = st.columns(2)
-with col_mobile:
-    mobile = st.text_input("Mobile", "")
-with col_email:
-    email = st.text_input("Email", "")
-date = datetime.now().strftime("%B %d, %Y")
+    # Image placed near the title
+    if 'package_selected' not in st.session_state or st.session_state.package_selected is None:
+        st.image("static/smarthome.png", use_container_width=True)
 
-# --- System Type ---
-st.subheader("💡 Select System Type")
-col_wifi, col_wired = st.columns(2)
-with col_wifi:
-    if st.button("WiFi Smart Home"):
+    # Initialize session state for the package selection
+    if 'package_selected' not in st.session_state:
+        st.session_state.package_selected = None
+    if 'system_type' not in st.session_state:
         st.session_state.system_type = "WiFi Smart Home"
-with col_wired:
-    if st.button("Wired Smart Home"):
-        st.session_state.system_type = "Wired Smart Home"
 
-system_type = st.session_state.system_type
+    # --- Customer Info ---
+    st.subheader("👤 Customer Information")
+    name = st.text_input("Name", "")
+    col_mobile, col_email = st.columns(2)
+    with col_mobile:
+        mobile = st.text_input("Mobile", "")
+    with col_email:
+        email = st.text_input("Email", "")
+    date = datetime.now().strftime("%B %d, %Y")
 
-if system_type == "WiFi Smart Home":
-    # --- Package Selection Buttons ---
-    st.subheader("🎁 Choose a Smart Home Package or Configure Manually")
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        if st.button("🛏️ One Bedroom Package"):
-            st.session_state.package_selected = "one_bedroom"
-    with col2:
-        if st.button("🏡 Two Bedroom Package"):
-            st.session_state.package_selected = "two_bedroom"
-    with col3:
-        if st.button("🏘️ Three Bedroom Package"):
-            st.session_state.package_selected = "three_bedroom"
-    with col4:
-        if st.button("🔧 Custom Configuration"):
-            st.session_state.package_selected = "manual"
+    # --- System Type ---
+    st.subheader("💡 Select System Type")
+    col_wifi, col_wired = st.columns(2)
+    with col_wifi:
+        if st.button("WiFi Smart Home"):
+            st.session_state.system_type = "WiFi Smart Home"
+    with col_wired:
+        if st.button("Wired Smart Home"):
+            st.session_state.system_type = "Wired Smart Home"
 
-    if st.session_state.package_selected:
-        st.button("↩️ Reset", on_click=lambda: st.session_state.update(package_selected=None))
+    system_type = st.session_state.system_type
 
-    # Define the core wifi options
-    wifi_options = {
-        "Wifi Thermostat": 500,
-        "Wifi Lights Switch": 300,
-        "Wifi Lights Dimmer": 300,
-        "Wifi Curtain Switch": 350,
-        "Wifi Video Intercom": 600,
-        "Wifi Smart Door lock": 540,
-        "Wifi Camera": 350,
-        "Wifi Power Socket": 250,
-        "Alexa": 600,
-        "Wifi WaterHeater": 500,
-    }
+    if system_type == "WiFi Smart Home":
+        # --- Package Selection Buttons ---
+        st.subheader("🎁 Choose a Smart Home Package or Configure Manually")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            if st.button("🛏️ One Bedroom Package"):
+                st.session_state.package_selected = "one_bedroom"
+        with col2:
+            if st.button("🏡 Two Bedroom Package"):
+                st.session_state.package_selected = "two_bedroom"
+        with col3:
+            if st.button("🏘️ Three Bedroom Package"):
+                st.session_state.package_selected = "three_bedroom"
+        with col4:
+            if st.button("🔧 Custom Configuration"):
+                st.session_state.package_selected = "manual"
 
-    if st.session_state.package_selected == "one_bedroom":
-        st.subheader("📦 One Bedroom Package Configuration")
-        one_bedroom_features = [
-            "Wifi Thermostat",
-            "Wifi Lights Switch",
-            "Wifi Lights Switch",
-            "Wifi Lights Switch",
-            "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in one_bedroom_features])
-        all_selected = [("One Bedroom Package", one_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+        if st.session_state.package_selected:
+            st.button("↩️ Reset", on_click=lambda: st.session_state.update(package_selected=None))
 
-    elif st.session_state.package_selected == "two_bedroom":
-        st.subheader("📦 Two Bedroom Package Configuration")
-        two_bedroom_features = [
-            "Wifi Thermostat", "Wifi Thermostat",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi WaterHeater", "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in two_bedroom_features])
-        all_selected = [("Two Bedroom Package", two_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+        # Define the core wifi options
+        wifi_options = {
+            "Wifi Thermostat": 500,
+            "Wifi Lights Switch": 300,
+            "Wifi Lights Dimmer": 300,
+            "Wifi Curtain Switch": 350,
+            "Wifi Video Intercom": 600,
+            "Wifi Smart Door lock": 540,
+            "Wifi Camera": 350,
+            "Wifi Power Socket": 250,
+            "Alexa": 600,
+            "Wifi WaterHeater": 500,
+        }
 
-    elif st.session_state.package_selected == "three_bedroom":
-        st.subheader("📦 Three Bedroom Package Configuration")
-        three_bedroom_features = [
-            "Wifi Thermostat", "Wifi Thermostat", "Wifi Thermostat",
-            "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
-            "Wifi WaterHeater", "Wifi WaterHeater", "Wifi WaterHeater",
-            "Wifi Smart Door lock"
-        ]
-        total = sum([wifi_options.get(feature, 0) for feature in three_bedroom_features])
-        all_selected = [("Three Bedroom Package", three_bedroom_features, total)]
-        generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
-
-    elif st.session_state.package_selected == "manual":
-        st.subheader("📦 Room Configuration (Custom)")
-        num_rooms = st.number_input("How many rooms?", min_value=1, max_value=20, value=1, key='num_rooms')
-        
-        all_selected = []
-        for i in range(num_rooms):
-            st.markdown(f"### 🛏️ Room {i + 1}")
-            selected = st.multiselect(f"Select features for Room {i+1}", wifi_options.keys(), key=f"room_{i}")
-            cost = sum([wifi_options.get(feature, 0) for feature in selected])
-            all_selected.append((f"Room {i+1}", selected, cost))
-        
-        total = sum(item[2] for item in all_selected)
-        if st.button("🧾 Generate Quotation"):
+        if st.session_state.package_selected == "one_bedroom":
+            st.subheader("📦 One Bedroom Package Configuration")
+            one_bedroom_features = [
+                "Wifi Thermostat",
+                "Wifi Lights Switch",
+                "Wifi Lights Switch",
+                "Wifi Lights Switch",
+                "Wifi WaterHeater",
+                "Wifi Smart Door lock"
+            ]
+            total = sum([wifi_options.get(feature, 0) for feature in one_bedroom_features])
+            all_selected = [("One Bedroom Package", one_bedroom_features, total)]
             generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
 
-else:
+        elif st.session_state.package_selected == "two_bedroom":
+            st.subheader("📦 Two Bedroom Package Configuration")
+            two_bedroom_features = [
+                "Wifi Thermostat", "Wifi Thermostat",
+                "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
+                "Wifi WaterHeater", "Wifi WaterHeater",
+                "Wifi Smart Door lock"
+            ]
+            total = sum([wifi_options.get(feature, 0) for feature in two_bedroom_features])
+            all_selected = [("Two Bedroom Package", two_bedroom_features, total)]
+            generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
 
-    st.info("📞 Please contact us at info@ketechs.com or 0566184681 for Wired Smart Home quotations.")
+        elif st.session_state.package_selected == "three_bedroom":
+            st.subheader("📦 Three Bedroom Package Configuration")
+            three_bedroom_features = [
+                "Wifi Thermostat", "Wifi Thermostat", "Wifi Thermostat",
+                "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch", "Wifi Lights Switch",
+                "Wifi WaterHeater", "Wifi WaterHeater", "Wifi WaterHeater",
+                "Wifi Smart Door lock"
+            ]
+            total = sum([wifi_options.get(feature, 0) for feature in three_bedroom_features])
+            all_selected = [("Three Bedroom Package", three_bedroom_features, total)]
+            generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
 
+        elif st.session_state.package_selected == "manual":
+            st.subheader("📦 Room Configuration (Custom)")
+            num_rooms = st.number_input("How many rooms?", min_value=1, max_value=20, value=1, key='num_rooms')
+            
+            all_selected = []
+            for i in range(num_rooms):
+                st.markdown(f"### 🛏️ Room {i + 1}")
+                selected = st.multiselect(f"Select features for Room {i+1}", wifi_options.keys(), key=f"room_{i}")
+                cost = sum([wifi_options.get(feature, 0) for feature in selected])
+                all_selected.append((f"Room {i+1}", selected, cost))
+            
+            total = sum(item[2] for item in all_selected)
+            if st.button("🧾 Generate Quotation"):
+                generate_quotation(name, mobile, email, date, system_type, all_selected, total, wifi_options)
+
+    else:
+        st.info("📞 Please contact us at info@ketechs.com or 0566184681 for Wired Smart Home quotations.")
